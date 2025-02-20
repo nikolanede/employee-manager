@@ -17,7 +17,7 @@ pipeline {
             steps {
                 script {
                     echo 'Cloning repository...'
-                    git 'https://github.com/your-repo.git'
+                    git 'https://github.com/nikolanede/employee-manager.git'
                 }
             }
         }
