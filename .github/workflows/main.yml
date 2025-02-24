@@ -1,0 +1,160 @@
+name: pipeline-employee-management/main
+on:
+  workflow_dispatch:
+env:
+  DOCKER_IMAGE: employee-manager-app
+  DOCKER_REGISTRY: ghcr.io/nikolanede
+#   # This item has no matching transformer
+#   GIT_COMMIT_SHORT: "${sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()}"
+jobs:
+  Checkout:
+    runs-on: ubuntu-latest
+    steps:
+    - name: checkout
+      uses: actions/checkout@v4.1.0
+#     # 'script' was not transformed because there is no suitable equivalent in GitHub Actions
+#     - name: script
+#       arguments:
+#       - key: scriptBlock
+#         value:
+#           isLiteral: true
+#           value: |-
+#             echo 'Cloning repository...'
+#                                 git 'https://github.com/nikolanede/employee-manager.git'
+  Build:
+    runs-on: ubuntu-latest
+    needs: Checkout
+    steps:
+    - name: checkout
+      uses: actions/checkout@v4.1.0
+#     # 'script' was not transformed because there is no suitable equivalent in GitHub Actions
+#     - name: script
+#       arguments:
+#       - key: scriptBlock
+#         value:
+#           isLiteral: true
+#           value: |-
+#             echo 'Building the application...'
+#                                 sh 'mvn clean package -DskipTests=false'
+  Code_Quality_Check:
+    name: Code Quality Check
+    runs-on: ubuntu-latest
+    needs: Build
+    steps:
+    - name: checkout
+      uses: actions/checkout@v4.1.0
+#     # 'script' was not transformed because there is no suitable equivalent in GitHub Actions
+#     - name: script
+#       arguments:
+#       - key: scriptBlock
+#         value:
+#           isLiteral: true
+#           value: |-
+#             echo 'Running static analysis...'
+#                                 sh 'mvn verify' // Runs checks like Checkstyle, PMD, SpotBugs
+  Test:
+    runs-on: ubuntu-latest
+    needs: Code_Quality_Check
+    steps:
+    - name: checkout
+      uses: actions/checkout@v4.1.0
+#     # 'script' was not transformed because there is no suitable equivalent in GitHub Actions
+#     - name: script
+#       arguments:
+#       - key: scriptBlock
+#         value:
+#           isLiteral: true
+#           value: |-
+#             echo 'Running unit tests...'
+#                                 sh 'mvn test'
+  Build_Docker_Image:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    needs: Test
+    steps:
+    - name: checkout
+      uses: actions/checkout@v4.1.0
+#     # 'script' was not transformed because there is no suitable equivalent in GitHub Actions
+#     - name: script
+#       arguments:
+#       - key: scriptBlock
+#         value:
+#           isLiteral: true
+#           value: |-
+#             echo "Building Docker image ${{ env.DOCKER_IMAGE }}:${{ env.GIT_COMMIT_SHORT }}"
+#                                 docker.build("${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_IMAGE }}:${{ env.GIT_COMMIT_SHORT }}")
+  Push_Docker_Image:
+    name: Push Docker Image
+    runs-on: ubuntu-latest
+    needs: Build_Docker_Image
+    steps:
+    - name: checkout
+      uses: actions/checkout@v4.1.0
+#     # 'script' was not transformed because there is no suitable equivalent in GitHub Actions
+#     - name: script
+#       arguments:
+#       - key: scriptBlock
+#         value:
+#           isLiteral: true
+#           value: |-
+#             docker.withRegistry("https://${{ env.DOCKER_REGISTRY }}", 'docker-credentials-id') {
+#                                     docker.image("${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_IMAGE }}:${{ env.GIT_COMMIT_SHORT }}").push()
+#                                     docker.image("${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_IMAGE }}:${{ env.GIT_COMMIT_SHORT }}").push("latest")
+#                                 }
+  Deploy:
+    runs-on: ubuntu-latest
+    needs: Push_Docker_Image
+    steps:
+    - name: checkout
+      uses: actions/checkout@v4.1.0
+#     # 'script' was not transformed because there is no suitable equivalent in GitHub Actions
+#     - name: script
+#       arguments:
+#       - key: scriptBlock
+#         value:
+#           isLiteral: true
+#           value: |-
+#             echo 'Deploying the application...'
+#                                 sh 'echo "Application deployed successfully!"' // Placeholder, replace with real deployment steps
+  Post-Build:
+    if: always()
+    name: Post Build
+    runs-on: ubuntu-latest
+    needs:
+    - Checkout
+    - Build
+    - Code_Quality_Check
+    - Test
+    - Build_Docker_Image
+    - Push_Docker_Image
+    - Deploy
+    steps:
+    - name: snapshot post build workflow status
+      run: |-
+        echo "success=${{ contains(needs.*.result,'success') && !contains(needs.*.result,'cancelled') && !contains(needs.*.result,'failure') }}" >> $GITHUB_OUTPUT
+        echo "failure=${{ contains(needs.*.result,'failure') && !contains(needs.*.result,'cancelled') }}" >> $GITHUB_OUTPUT
+      id: post_build
+#     # 'script' was not transformed because there is no suitable equivalent in GitHub Actions
+#     - name: script
+#       arguments:
+#       - key: scriptBlock
+#         value:
+#           isLiteral: true
+#           value: "echo \"â\x9D\x8C FAILURE: Build #${{ env.BUILD_NUMBER }} failed!\"\n                sh 'curl -X POST -H \"Content-Type: application/json\" -d \\'{\"text\":\"ð\x9F\x9A¨ Build FAILED: ${{ env.JOB_NAME }} #${{ env.BUILD_NUMBER }}\"}\\' https://your-slack-webhook-url'"
+#       if: steps.post_build.outputs.failure == 'true'
+#     # 'script' was not transformed because there is no suitable equivalent in GitHub Actions
+#     - name: script
+#       arguments:
+#       - key: scriptBlock
+#         value:
+#           isLiteral: true
+#           value: "echo \"ð\x9F\x8E\x89 SUCCESS: Build #${{ env.BUILD_NUMBER }} completed successfully!\"\n                sh 'curl -X POST -H \"Content-Type: application/json\" -d \\'{\"text\":\"â\x9C\N Build SUCCESS: ${{ env.JOB_NAME }} #${{ env.BUILD_NUMBER }}\"}\\' https://your-slack-webhook-url'"
+#       if: steps.post_build.outputs.success == 'true'
+#     # 'script' was not transformed because there is no suitable equivalent in GitHub Actions
+#     - name: script
+#       arguments:
+#       - key: scriptBlock
+#         value:
+#           isLiteral: true
+#           value: "echo \"ð\x9F\x94\x84 Build completed. Cleaning up workspace...\"\n                sh 'docker system prune -f'"
+#       if: always()
